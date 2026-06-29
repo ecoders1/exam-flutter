@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Exit Exam Ethiopia — AI-Powered Offline Exam Platform">
+  <meta name="keywords" content="exit exam, Ethiopia, university, MCQ, exam preparation">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Exit Exam Ethiopia">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <!-- Preconnect to Supabase -->
+  <link rel="preconnect" href="https://supabase.co">
+
+  <title>Exit Exam Ethiopia</title>
+
+  <style>
+    body {
+      margin: 0;
+      background-color: #0A0A0A;
+      overflow: hidden;
+    }
+
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0D47A1 0%, #1B5E20 50%, #000000 100%);
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    #splash .globe {
+      font-size: 80px;
+      animation: spin 3s linear infinite;
+    }
+
+    #splash h1 {
+      color: white;
+      font-family: sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      margin: 16px 0 4px;
+    }
+
+    #splash h2 {
+      color: #FFD700;
+      font-family: sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 8px;
+      margin: 0;
+    }
+
+    .flag-bar {
+      display: flex;
+      gap: 4px;
+      margin-top: 20px;
+    }
+    .flag-bar div {
+      width: 30px;
+      height: 6px;
+      border-radius: 3px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 40px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1565C0;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.4s; }
+    .dot:nth-child(3) { animation-delay: 0.8s; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.5); opacity: 0.4; }
+      50%       { transform: scale(1);   opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash screen shown before Flutter loads -->
+  <div id="splash">
+    <div class="globe">🌍</div>
+    <h1>EXIT EXAM</h1>
+    <h2>ETHIOPIA</h2>
+    <div class="flag-bar">
+      <div style="background:#078930"></div>
+      <div style="background:#FCDD09"></div>
+      <div style="background:#DA121A"></div>
+    </div>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <script>
+    // Hide splash when Flutter is ready
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('splash');
+      splash.style.opacity = '0';
+      setTimeout(function () { splash.style.display = 'none'; }, 500);
+    });
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
