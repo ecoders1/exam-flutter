@@ -34,17 +34,30 @@ After your first sign-up with `milkiyaas43@gmail.com`, run in Supabase SQL edito
 UPDATE public.users SET is_admin = true WHERE email = 'milkiyaas43@gmail.com';
 ```
 
-### 5. Run the App
+### 5. Configure .env.local
+Copy `.env.example` to `.env.local` and fill in your values.
+**Format is JSON** (required by `--dart-define-from-file`):
+```json
+{
+  "SUPABASE_URL": "https://your-project-id.supabase.co",
+  "SUPABASE_ANON_KEY": "your-anon-key-here",
+  "OPENAI_API_KEY": "sk-your-openai-key-here"
+}
+```
+> `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` go in **GitHub Actions secrets only** — not here.
+
+### 6. Run the App
 ```cmd
-# Using .env.local file (recommended — no typing keys every time)
+# Web (Chrome)
 flutter run -d chrome --dart-define-from-file=.env.local
+
+# Android
 flutter run --dart-define-from-file=.env.local
 
-# OR pass values manually
-flutter run -d chrome --dart-define=SUPABASE_URL=https://xxx.supabase.co --dart-define=SUPABASE_ANON_KEY=xxx --dart-define=OPENAI_API_KEY=sk-xxx
+# Or just press F5 in VS Code — launch.json is already configured
 ```
 
-### 6. Build for Production
+### 7. Build for Production
 ```cmd
 # Android APK
 flutter build apk --release --dart-define-from-file=.env.local
