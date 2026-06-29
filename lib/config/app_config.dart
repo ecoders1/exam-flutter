@@ -28,7 +28,7 @@ class AppConfig {
   // ── JWT ────────────────────────────────────────────────────────────────────
   static const String jwtSecret = String.fromEnvironment(
     'JWT_SECRET',
-    defaultValue: 'eee-exit-exam-ethiopia-super-secret-jwt-key-2024',
+    defaultValue: 'eee_exit_exam_ethiopia_super_secret_jwt_key_2024',
   );
 
   // ── OpenAI ─────────────────────────────────────────────────────────────────
