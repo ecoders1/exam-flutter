@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../config/app_config.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/offline_service.dart';
+import '../services/supabase_service.dart';
 
-// ── Current user state ─────────────────────────────────────────────────────
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   AuthNotifier() : super(const AsyncValue.loading()) {
     _init();
@@ -11,7 +12,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
 
   Future<void> _init() async {
     try {
-      // Try restoring session
+      // If Supabase not initialized, use cached user for offline mode
+      if (!SupabaseService.isInitialized) {
+        final cached = OfflineService.instance.getCachedUser();
+        state = AsyncValue.data(cached);
+        return;
+      }
+
       final user = await AuthService.instance.restoreSession();
       if (user != null) {
         await OfflineService.instance.cacheUser(user);
@@ -19,11 +26,17 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
         return;
       }
 
-      // Try cached user for offline
+      // Fall back to cached user (offline)
       final cached = OfflineService.instance.getCachedUser();
       state = AsyncValue.data(cached);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      // On any error, try cached user
+      final cached = OfflineService.instance.getCachedUser();
+      if (cached != null) {
+        state = AsyncValue.data(cached);
+      } else {
+        state = AsyncValue.error(e, st);
+      }
     }
   }
 
@@ -32,6 +45,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     required String email,
     required String password,
   }) async {
+    if (!SupabaseService.isInitialized) {
+      state = AsyncValue.error(
+        'No Supabase connection. Please add your SUPABASE_URL and SUPABASE_ANON_KEY to .env.local',
+        StackTrace.current,
+      );
+      return;
+    }
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final user = await AuthService.instance.signUp(
@@ -44,7 +64,17 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     });
   }
 
-  Future<void> signIn({required String email, required String password}) async {
+  Future<void> signIn({
+    required String email,
+    required String password,
+  }) async {
+    if (!SupabaseService.isInitialized) {
+      state = AsyncValue.error(
+        'No Supabase connection. Please add your SUPABASE_URL and SUPABASE_ANON_KEY to .env.local',
+        StackTrace.current,
+      );
+      return;
+    }
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final user = await AuthService.instance.signIn(
@@ -57,7 +87,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   }
 
   Future<void> signOut() async {
-    await AuthService.instance.signOut();
+    if (SupabaseService.isInitialized) {
+      await AuthService.instance.signOut();
+    }
     await OfflineService.instance.clearUser();
     state = const AsyncValue.data(null);
   }
@@ -68,15 +100,21 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>(
+final authProvider =
+    StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>(
   (ref) => AuthNotifier(),
 );
 
-// Convenience: just the user or null
 final currentUserProvider = Provider<UserModel?>((ref) {
   return ref.watch(authProvider).valueOrNull;
 });
 
 final isAdminProvider = FutureProvider<bool>((ref) async {
+  if (!SupabaseService.isInitialized) return false;
   return AuthService.instance.isAdmin();
+});
+
+/// Whether Supabase is connected
+final isOnlineProvider = Provider<bool>((ref) {
+  return SupabaseService.isInitialized && AppConfig.hasRealSupabase;
 });

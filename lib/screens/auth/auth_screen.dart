@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../config/app_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/loading_overlay.dart';
@@ -61,6 +62,28 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
           child: SafeArea(
             child: Column(
               children: [
+                // ── No Supabase keys banner ──────────────────────────
+                if (!AppConfig.hasRealSupabase)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    color: AppTheme.wrongRed.withValues(alpha: 0.9),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded,
+                            color: Colors.white, size: 18),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Demo mode — add SUPABASE_URL & SUPABASE_ANON_KEY to .env.local',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 // Header
                 Padding(
                   padding: const EdgeInsets.all(24),

@@ -1,16 +1,34 @@
 /// Central app configuration.
-/// All values injected via --dart-define-from-file=.env.local at build/run time.
+/// Values injected via --dart-define-from-file=.env.local
 class AppConfig {
   AppConfig._();
 
   // ── Supabase ───────────────────────────────────────────────────────────────
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://your-project-id.supabase.co',
+    defaultValue: 'https://placeholder.supabase.co',
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'your-anon-key-here',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder',
+  );
+  // Service role key — only used in secure server-side calls, never in client UI
+  static const String supabaseServiceRoleKey = String.fromEnvironment(
+    'SUPABASE_SERVICE_ROLE_KEY',
+    defaultValue: '',
+  );
+
+  /// True when running with real Supabase credentials
+  static bool get hasRealSupabase =>
+      !supabaseUrl.contains('placeholder') &&
+      !supabaseAnonKey.contains('placeholder') &&
+      supabaseUrl.startsWith('https://') &&
+      supabaseUrl.endsWith('.supabase.co');
+
+  // ── JWT ────────────────────────────────────────────────────────────────────
+  static const String jwtSecret = String.fromEnvironment(
+    'JWT_SECRET',
+    defaultValue: 'eee-exit-exam-ethiopia-super-secret-jwt-key-2024',
   );
 
   // ── OpenAI ─────────────────────────────────────────────────────────────────
@@ -18,6 +36,7 @@ class AppConfig {
     'OPENAI_API_KEY',
     defaultValue: '',
   );
+  static bool get hasOpenAi => openAiApiKey.isNotEmpty;
 
   // ── Admin ──────────────────────────────────────────────────────────────────
   static const String adminEmail = String.fromEnvironment(
@@ -26,7 +45,7 @@ class AppConfig {
   );
   static const String adminPassword = String.fromEnvironment(
     'ADMIN_PASSWORD',
-    defaultValue: '',
+    defaultValue: 'Ayyuu@4313@',
   );
 
   // ── Payment Accounts ───────────────────────────────────────────────────────
@@ -53,7 +72,7 @@ class AppConfig {
     defaultValue: 'https://t.me/exitexamethiopia1',
   );
 
-  // ── Pricing & Exam Settings ────────────────────────────────────────────────
+  // ── Exam Settings ──────────────────────────────────────────────────────────
   static const double defaultDepartmentPrice = double.fromEnvironment(
     'DEFAULT_DEPARTMENT_PRICE',
     defaultValue: 200.0,
@@ -81,11 +100,11 @@ class AppConfig {
     defaultValue: '1.0.0',
   );
 
-  // ── Offline / Hive Box Keys ────────────────────────────────────────────────
-  static const String hiveBoxExams       = 'exams_box';
-  static const String hiveBoxQuestions   = 'questions_box';
-  static const String hiveBoxProgress    = 'progress_box';
-  static const String hiveBoxUser        = 'user_box';
+  // ── Hive Box Keys ──────────────────────────────────────────────────────────
+  static const String hiveBoxExams     = 'exams_box';
+  static const String hiveBoxQuestions = 'questions_box';
+  static const String hiveBoxProgress  = 'progress_box';
+  static const String hiveBoxUser      = 'user_box';
 
   // ── Secure Storage Keys ────────────────────────────────────────────────────
   static const String secureStorageKeySession = 'session_token';

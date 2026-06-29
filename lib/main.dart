@@ -11,21 +11,27 @@ import 'utils/router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Lock orientation to portrait on mobile
+  // Portrait only on mobile
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Security: prevent screenshots (Android)
-  // This is set per-screen where needed via FLAG_SECURE.
-  // For global enforcement on Android, configure in MainActivity.kt
-
-  // Initialize Supabase
-  await SupabaseService.initialize();
-
-  // Initialize Hive offline storage
+  // Initialize offline storage first (always works)
   await OfflineService.initialize();
+
+  // Initialize Supabase — graceful fallback if keys are placeholder
+  if (AppConfig.hasRealSupabase) {
+    try {
+      await SupabaseService.initialize();
+    } catch (e) {
+      debugPrint('⚠️  Supabase init failed: $e');
+      debugPrint('→ Running in offline/demo mode');
+    }
+  } else {
+    debugPrint('ℹ️  No real Supabase keys — running in offline/demo mode');
+    debugPrint('→ Set SUPABASE_URL and SUPABASE_ANON_KEY in .env.local');
+  }
 
   runApp(
     const ProviderScope(
@@ -52,12 +58,11 @@ class ExitExamApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en'), // English
-        Locale('om'), // Afaan Oromoo
-        Locale('am'), // Amharic
+        Locale('en'),
+        Locale('om'),
+        Locale('am'),
       ],
       builder: (context, child) {
-        // Global: disable text selection menu copy on exam screens
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.noScaling,

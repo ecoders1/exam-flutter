@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import '../config/app_config.dart';
 
 /// AI-powered MCQ Generator.
 /// Extracts text from uploaded files (PDF/DOCX/PPT/XLS) and generates MCQs.
@@ -106,12 +107,13 @@ Rules:
   // ── Call LLM API ──────────────────────────────────────────────────────────
   /// Replace this with your actual AI provider (OpenAI, Gemini, Anthropic, etc.)
   Future<String> _callAI(String prompt) async {
-    // Example: OpenAI GPT-4o
-    // Set your API key via --dart-define=OPENAI_API_KEY=...
-    const apiKey = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
+    // Use key from AppConfig (injected via --dart-define-from-file=.env.local)
+    final apiKey = AppConfig.openAiApiKey;
 
     if (apiKey.isEmpty) {
-      throw Exception('AI API key not configured. Set OPENAI_API_KEY.');
+      throw Exception(
+        'OpenAI API key not set. Add OPENAI_API_KEY to .env.local',
+      );
     }
 
     final response = await _dio.post(
