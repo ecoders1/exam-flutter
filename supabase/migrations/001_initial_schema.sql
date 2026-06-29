@@ -1,25 +1,24 @@
 -- ============================================================
 -- Exit Exam Ethiopia — Supabase Database Schema
--- Run this in your Supabase SQL editor
+-- IDEMPOTENT: safe to run multiple times
 -- ============================================================
 
--- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
--- ── USERS ─────────────────────────────────────────────────────────────────────
+-- ── TABLES ────────────────────────────────────────────────────────────────────
+
 create table if not exists public.users (
-  id              uuid primary key references auth.users(id) on delete cascade,
-  full_name       text not null,
-  email           text not null unique,
-  avatar_url      text,
-  device_id       text,
-  is_admin        boolean default false,
-  is_blocked      boolean default false,
+  id                    uuid primary key references auth.users(id) on delete cascade,
+  full_name             text not null,
+  email                 text not null unique,
+  avatar_url            text,
+  device_id             text,
+  is_admin              boolean default false,
+  is_blocked            boolean default false,
   unlocked_departments  text[] default '{}',
-  created_at      timestamptz default now()
+  created_at            timestamptz default now()
 );
 
--- ── DEVICE SESSIONS ────────────────────────────────────────────────────────────
 create table if not exists public.device_sessions (
   id          uuid primary key default uuid_generate_v4(),
   user_id     uuid references public.users(id) on delete cascade,
@@ -28,30 +27,19 @@ create table if not exists public.device_sessions (
   created_at  timestamptz default now()
 );
 
--- ── DEPARTMENTS ────────────────────────────────────────────────────────────────
 create table if not exists public.departments (
-  id            uuid primary key default uuid_generate_v4(),
-  name          text not null,
-  year          text not null,
-  description   text,
-  icon_url      text,
-  price         numeric(10,2) default 200.00,
-  is_default    boolean default false,
-  is_active     boolean default true,
-  exam_count    integer default 0,
-  created_at    timestamptz default now()
+  id           uuid primary key default uuid_generate_v4(),
+  name         text not null,
+  year         text not null,
+  description  text,
+  icon_url     text,
+  price        numeric(10,2) default 200.00,
+  is_default   boolean default false,
+  is_active    boolean default true,
+  exam_count   integer default 0,
+  created_at   timestamptz default now()
 );
 
--- Seed default departments
-insert into public.departments (name, year, price, is_default, is_active)
-values
-  ('Ethiopian Exit Exam 2015', '2015', 0,   true,  true),
-  ('Ethiopian Exit Exam 2016', '2016', 200, false, true),
-  ('Ethiopian Exit Exam 2017', '2017', 200, false, true),
-  ('Ethiopian Exit Exam 2018', '2018', 200, false, true)
-on conflict do nothing;
-
--- ── EXAMS ──────────────────────────────────────────────────────────────────────
 create table if not exists public.exams (
   id                uuid primary key default uuid_generate_v4(),
   title             text not null,
@@ -66,7 +54,6 @@ create table if not exists public.exams (
   created_at        timestamptz default now()
 );
 
--- ── QUESTIONS ─────────────────────────────────────────────────────────────────
 create table if not exists public.questions (
   id              uuid primary key default uuid_generate_v4(),
   exam_id         uuid references public.exams(id) on delete cascade,
@@ -82,7 +69,6 @@ create table if not exists public.questions (
   created_at      timestamptz default now()
 );
 
--- ── RESULTS ───────────────────────────────────────────────────────────────────
 create table if not exists public.results (
   id                  uuid primary key default uuid_generate_v4(),
   user_id             uuid references public.users(id) on delete cascade,
@@ -97,7 +83,6 @@ create table if not exists public.results (
   completed_at        timestamptz default now()
 );
 
--- ── PAYMENTS ──────────────────────────────────────────────────────────────────
 create table if not exists public.payments (
   id              uuid primary key default uuid_generate_v4(),
   user_id         uuid references public.users(id) on delete cascade,
@@ -111,18 +96,16 @@ create table if not exists public.payments (
   created_at      timestamptz default now()
 );
 
--- ── UPLOADS ───────────────────────────────────────────────────────────────────
 create table if not exists public.uploads (
-  id            uuid primary key default uuid_generate_v4(),
-  exam_id       uuid references public.exams(id) on delete cascade,
-  file_name     text not null,
-  file_url      text,
-  file_type     text,
-  uploaded_by   uuid references public.users(id),
-  created_at    timestamptz default now()
+  id           uuid primary key default uuid_generate_v4(),
+  exam_id      uuid references public.exams(id) on delete cascade,
+  file_name    text not null,
+  file_url     text,
+  file_type    text,
+  uploaded_by  uuid references public.users(id),
+  created_at   timestamptz default now()
 );
 
--- ── ADMIN LOGS ────────────────────────────────────────────────────────────────
 create table if not exists public.admin_logs (
   id          uuid primary key default uuid_generate_v4(),
   admin_id    uuid references public.users(id),
@@ -132,21 +115,61 @@ create table if not exists public.admin_logs (
   created_at  timestamptz default now()
 );
 
--- ============================================================
--- ROW LEVEL SECURITY (RLS)
--- ============================================================
+-- ── SEED DEFAULT DEPARTMENTS ──────────────────────────────────────────────────
 
-alter table public.users enable row level security;
-alter table public.device_sessions enable row level security;
-alter table public.departments enable row level security;
-alter table public.exams enable row level security;
-alter table public.questions enable row level security;
-alter table public.results enable row level security;
-alter table public.payments enable row level security;
-alter table public.uploads enable row level security;
-alter table public.admin_logs enable row level security;
+insert into public.departments (name, year, price, is_default, is_active)
+values
+  ('Ethiopian Exit Exam 2015', '2015', 0,   true,  true),
+  ('Ethiopian Exit Exam 2016', '2016', 200, false, true),
+  ('Ethiopian Exit Exam 2017', '2017', 200, false, true),
+  ('Ethiopian Exit Exam 2018', '2018', 200, false, true)
+on conflict do nothing;
 
--- ── users policies ─────────────────────────────────────────────────────────
+-- ── ENABLE RLS ────────────────────────────────────────────────────────────────
+
+alter table public.users             enable row level security;
+alter table public.device_sessions   enable row level security;
+alter table public.departments       enable row level security;
+alter table public.exams             enable row level security;
+alter table public.questions         enable row level security;
+alter table public.results           enable row level security;
+alter table public.payments          enable row level security;
+alter table public.uploads           enable row level security;
+alter table public.admin_logs        enable row level security;
+
+-- ── DROP ALL EXISTING POLICIES (idempotent) ───────────────────────────────────
+
+drop policy if exists "Users can read own profile"           on public.users;
+drop policy if exists "Users can update own profile"         on public.users;
+drop policy if exists "Users can insert own profile"         on public.users;
+drop policy if exists "Admin can read all users"             on public.users;
+drop policy if exists "Admin can update all users"           on public.users;
+
+drop policy if exists "Anyone can read active departments"   on public.departments;
+drop policy if exists "Admin can manage departments"         on public.departments;
+
+drop policy if exists "Anyone can read published exams"      on public.exams;
+drop policy if exists "Admin can manage exams"               on public.exams;
+
+drop policy if exists "Authenticated users can read questions" on public.questions;
+drop policy if exists "Admin can manage questions"           on public.questions;
+
+drop policy if exists "Users can read own results"           on public.results;
+drop policy if exists "Users can insert own results"         on public.results;
+drop policy if exists "Admin can read all results"           on public.results;
+
+drop policy if exists "Users can read own payments"          on public.payments;
+drop policy if exists "Users can insert own payments"        on public.payments;
+drop policy if exists "Admin can manage all payments"        on public.payments;
+
+drop policy if exists "Users can manage own device sessions" on public.device_sessions;
+
+drop policy if exists "Admin can manage uploads"             on public.uploads;
+drop policy if exists "Admin can manage logs"                on public.admin_logs;
+
+-- ── CREATE POLICIES ───────────────────────────────────────────────────────────
+
+-- users
 create policy "Users can read own profile"
   on public.users for select
   using (auth.uid() = id);
@@ -162,22 +185,16 @@ create policy "Users can insert own profile"
 create policy "Admin can read all users"
   on public.users for select
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
 create policy "Admin can update all users"
   on public.users for update
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ── departments policies ────────────────────────────────────────────────────
+-- departments
 create policy "Anyone can read active departments"
   on public.departments for select
   using (is_active = true);
@@ -185,13 +202,10 @@ create policy "Anyone can read active departments"
 create policy "Admin can manage departments"
   on public.departments for all
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ── exams policies ──────────────────────────────────────────────────────────
+-- exams
 create policy "Anyone can read published exams"
   on public.exams for select
   using (is_published = true);
@@ -199,13 +213,10 @@ create policy "Anyone can read published exams"
 create policy "Admin can manage exams"
   on public.exams for all
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ── questions policies ──────────────────────────────────────────────────────
+-- questions
 create policy "Authenticated users can read questions"
   on public.questions for select
   using (auth.role() = 'authenticated');
@@ -213,13 +224,10 @@ create policy "Authenticated users can read questions"
 create policy "Admin can manage questions"
   on public.questions for all
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ── results policies ────────────────────────────────────────────────────────
+-- results
 create policy "Users can read own results"
   on public.results for select
   using (auth.uid() = user_id);
@@ -231,13 +239,10 @@ create policy "Users can insert own results"
 create policy "Admin can read all results"
   on public.results for select
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ── payments policies ───────────────────────────────────────────────────────
+-- payments
 create policy "Users can read own payments"
   on public.payments for select
   using (auth.uid() = user_id);
@@ -249,60 +254,49 @@ create policy "Users can insert own payments"
 create policy "Admin can manage all payments"
   on public.payments for all
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ── device_sessions policies ────────────────────────────────────────────────
+-- device_sessions
 create policy "Users can manage own device sessions"
   on public.device_sessions for all
   using (auth.uid() = user_id);
 
--- ── uploads policies ────────────────────────────────────────────────────────
+-- uploads
 create policy "Admin can manage uploads"
   on public.uploads for all
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ── admin_logs policies ─────────────────────────────────────────────────────
+-- admin_logs
 create policy "Admin can manage logs"
   on public.admin_logs for all
   using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
--- ============================================================
--- STORAGE BUCKETS
--- ============================================================
--- Run these in Supabase dashboard > Storage > New bucket
--- Or via SQL:
+-- ── STORAGE BUCKETS ───────────────────────────────────────────────────────────
 
 insert into storage.buckets (id, name, public)
 values ('uploads', 'uploads', false)
-on conflict do nothing;
+on conflict (id) do nothing;
 
 insert into storage.buckets (id, name, public)
 values ('payments', 'payments', false)
-on conflict do nothing;
+on conflict (id) do nothing;
 
--- Storage policies
+-- Storage policies (drop first)
+drop policy if exists "Admin can upload files"                on storage.objects;
+drop policy if exists "Users can upload payment screenshots"  on storage.objects;
+drop policy if exists "Admin can read payment screenshots"    on storage.objects;
+drop policy if exists "Users can read own payment screenshots" on storage.objects;
+
 create policy "Admin can upload files"
   on storage.objects for insert
   with check (
     bucket_id = 'uploads' and
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
 create policy "Users can upload payment screenshots"
@@ -316,10 +310,7 @@ create policy "Admin can read payment screenshots"
   on storage.objects for select
   using (
     bucket_id = 'payments' and
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.is_admin = true
-    )
+    exists (select 1 from public.users u where u.id = auth.uid() and u.is_admin = true)
   );
 
 create policy "Users can read own payment screenshots"
@@ -329,14 +320,7 @@ create policy "Users can read own payment screenshots"
     auth.uid()::text = (storage.foldername(name))[1]
   );
 
--- ============================================================
--- REALTIME
--- ============================================================
--- Enable realtime on these tables in Supabase dashboard:
--- payments, departments, users
-
--- ============================================================
--- Set admin user (run after first signup)
--- ============================================================
--- update public.users set is_admin = true
--- where email = 'milkiyaas43@gmail.com';
+-- ── SET ADMIN USER ────────────────────────────────────────────────────────────
+-- Run this AFTER your first signup with milkiyaas43@gmail.com:
+--
+-- update public.users set is_admin = true where email = 'milkiyaas43@gmail.com';
